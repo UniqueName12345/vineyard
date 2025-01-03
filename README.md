@@ -7,5 +7,7 @@
 
 ## Inspiration
 robin888b, obviously
+
 https://github.com/XxFluffyAsherxX/e926_browser - already existing fork, might as well credit them as they at least changed _A_ aspect
-the ACTUAL e9 / e6 UI 
+
+the ACTUAL e9 / e6 UI for "inspiration"
