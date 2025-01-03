@@ -1,22 +1,11 @@
-# e926.net browser
+# Vineyard
+(don't ask about the name)
+
+## How to use
+...it's a website. You put the address into a web browser, and then you can use it from there.
 
 
-(compatible with a certain e6 website);
-#### if you want to see NSFW content, just remove `dspNONE` at the line 48 in the `index.html` file ⤵
-
-before :
-```html
-                </div>
-                <div id="ratingDiv" class="dspNONE">
-                    <p>Ratting : </p>
-```
-after :
-```html
-                </div>
-                <div id="ratingDiv" class="">
-                    <p>Ratting : </p>
-```
-
-
-### Important ⚠
-Many people will surely do a cleaner, more optimized and more efficient job, but I don't care, I create this project only to learn how to send and receive api requests
+## Inspiration
+robin888b, obviously
+https://github.com/XxFluffyAsherxX/e926_browser - already existing fork, might as well credit them as they at least changed _A_ aspect
+the ACTUAL e9 / e6 UI 
