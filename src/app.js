@@ -338,7 +338,10 @@ function search(arg) {
 }
 
 function showPicture(ID) {
-    const modalContent = document.getElementById("modalContent")
+    const modal = document.getElementById("modal");
+    const modalContent = document.getElementById("modalContent");
+    const modalImg = document.getElementById("modalImg");
+    
     const loadItem = async () => {
         const result = await fetch(`https://e621.net/posts/${ID}.json`)
         const data = await result.json()
@@ -356,6 +359,9 @@ function showPicture(ID) {
         }
 
         function setupModal() {
+            modal.style.display = "block";
+            document.body.style.overflow = "hidden"; // Prevent body scrolling when modal is open
+            
             const post = data.post;
             const isVideo = post.file.url.endsWith(".webm");
             const isUnsafe = post.rating !== 's';
@@ -410,6 +416,27 @@ function showPicture(ID) {
                 });
             }
 
+            // Add zoom functionality
+            modalImg.addEventListener('click', function() {
+                this.classList.toggle('zoomed');
+            });
+            
+            // Close modal when clicking background
+            document.getElementById("modalBackground").onclick = function() {
+                modal.style.display = "none";
+                document.body.style.overflow = ""; // Restore body scrolling
+                modalImg.classList.remove('zoomed'); // Reset zoom state
+            };
+            
+            // Close modal on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    modal.style.display = "none";
+                    document.body.style.overflow = "";
+                    modalImg.classList.remove('zoomed');
+                }
+            });
+
             // Set up download button
             const downloadBtn = document.getElementById("downloadPost");
             downloadBtn.addEventListener('click', async () => {
@@ -449,8 +476,6 @@ function showPicture(ID) {
         }
 
         setupModal();
-        const modal = document.getElementById("modal");
-        modal.classList.add("active");
     }
     loadItem()
 }
