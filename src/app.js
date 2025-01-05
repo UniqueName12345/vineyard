@@ -163,7 +163,6 @@ function loadProfileWorks(direction) {
 var page = 1
 function search(arg) {
     const searchBox = document.getElementById("searchBox").value;
-    const titleSearchBox = document.getElementById("titleSearchBox");
     const rattingOption = document.getElementById("rattingOption");
     const galerie = document.getElementById("galerie");
     const orderSelect = document.getElementById("orderSelect").value;
@@ -206,6 +205,7 @@ function search(arg) {
         
         if (ratingHierarchy[detectedRating] > ratingHierarchy[currentRating]) {
             if (!isAgeVerified) {
+                // Show verification modal first
                 showAgeVerification(detectedRating, () => {
                     rattingOption.value = detectedRating;
                     performSearch();
@@ -220,33 +220,10 @@ function search(arg) {
     performSearch();
 
     function performSearch() {
-        let query = `https://e621.net/posts.json?`
-        let tags = [];
-
-        // Add title search if present
-        if (titleSearchBox && titleSearchBox.value.trim()) {
-            tags.push(`title:*${titleSearchBox.value.trim()}*`);
-        }
-
-        // Add regular tags if present
-        if (searchBox.trim()) {
-            tags.push(searchBox.trim());
-        }
-
-        // Add tags to query
-        if (tags.length > 0) {
-            query += `tags=${tags.join('+')}`;
-        }
-
-        if (rattingOption.value != 0){
-            query += `+rating:${rattingOption.value}`;
-        }
-        if (orderSelect == 1){
-            query += `+order:random`;
-        }
-        if (minimumScore != ""){
-            query += `+score:>${minimumScore}`;
-        }
+        let query = `https://e621.net/posts.json?tags=${searchBox}`
+        if (rattingOption.value != 0){query += `+rating%3A${rattingOption.value}`}
+        if (orderSelect == 1){query += `+order%3Arandom`}
+        if (minimumScore != ""){query += `+score:%3E${minimumScore}`}
         if (arg){
             if (arg == 1){
                 page += 1
@@ -360,147 +337,201 @@ function search(arg) {
     }
 }
 
-function showPicture(ID) {
-    const modal = document.getElementById("modal");
-    const modalContent = document.getElementById("modalContent");
-    const modalImg = document.getElementById("modalImg");
+// Helper function to convert rating codes to friendly names
+function getFriendlyRating(rating) {
+    const ratingMap = {
+        's': 'Safe',
+        'q': 'Questionable',
+        'e': 'Explicit'
+    };
+    return ratingMap[rating.toLowerCase()] || 'Unknown';
+}
+
+function showPicture(post) {
+    const galerie = document.getElementById("galerie");
+    const div = document.createElement("div");
+    div.className = "image-container";
     
-    const loadItem = async () => {
-        const result = await fetch(`https://e621.net/posts/${ID}.json`)
-        const data = await result.json()
-        console.log(data)
-        
-        // Helper function to get file extension
-        const getFileExtension = (url) => {
-            return url.split('.').pop().toLowerCase();
-        }
-        
-        // Helper function to get filename from URL
-        const getFilename = (url) => {
-            const parts = url.split('/');
-            return parts[parts.length - 1];
-        }
+    // Determine if it's a video
+    const isVideo = post.file.ext === 'webm';
+    
+    // Add media type indicator
+    const mediaTypeIndicator = document.createElement('div');
+    mediaTypeIndicator.className = `media-type ${isVideo ? 'video' : 'image'}`;
+    mediaTypeIndicator.textContent = isVideo ? 'Video' : 'Image';
+    div.appendChild(mediaTypeIndicator);
 
-        function setupModal() {
-            modal.style.display = "block";
-            document.body.style.overflow = "hidden"; // Prevent body scrolling when modal is open
-            
-            const post = data.post;
-            const isVideo = post.file.url.endsWith(".webm");
-            const isUnsafe = post.rating !== 's';
-            
-            // Create container for media
-            const mediaContainer = document.createElement('div');
-            mediaContainer.className = `image-container${isUnsafe ? ' unsafe blurred' : ''}`;
-            
-            // Set up the media element (image or video)
-            const mediaElement = isVideo ? 
-                `<video controls src="${post.file.url}" id="modalImg"></video>` :
-                `<img src="${post.file.url}" id="modalImg" alt="Post Image">`;
-            
-            // Set up the info section
-            const infoHtml = `
-                <div class="modal-info">
-                    <p>
-                        <span class="post-id">ID: ${ID}</span>
-                        <span class="separator">|</span>
-                        <span class="rating">Rating: ${post.rating}</span>
-                    </p>
-                    <div class="post-actions">
-                        <button id="downloadPost" class="action-button">
-                            <span class="action-icon">⬇️</span>
-                            Download
-                        </button>
-                        <button id="viewOnE6" class="action-button">
-                            <span class="action-icon">🔗</span>
-                            View on e621
-                        </button>
-                    </div>
-                </div>`;
-
-            mediaContainer.innerHTML = mediaElement;
-            modalContent.innerHTML = '';
-            modalContent.appendChild(mediaContainer);
-            modalContent.insertAdjacentHTML('beforeend', infoHtml);
-
-            if (isUnsafe) {
-                let clickCount = 0;
-                let clickTimer = null;
-                
-                mediaContainer.addEventListener('click', (e) => {
-                    clickCount++;
-                    
-                    if (clickCount === 1) {
-                        mediaContainer.classList.remove('blurred');
-                        clickTimer = setTimeout(() => {
-                            clickCount = 0;
-                        }, 500);
-                    }
-                });
-            }
-
-            // Add zoom functionality
-            modalImg.addEventListener('click', function() {
-                this.classList.toggle('zoomed');
-            });
-            
-            // Close modal when clicking background
-            document.getElementById("modalBackground").onclick = function() {
-                modal.style.display = "none";
-                document.body.style.overflow = ""; // Restore body scrolling
-                modalImg.classList.remove('zoomed'); // Reset zoom state
-            };
-            
-            // Close modal on escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    modal.style.display = "none";
-                    document.body.style.overflow = "";
-                    modalImg.classList.remove('zoomed');
-                }
-            });
-
-            // Set up download button
-            const downloadBtn = document.getElementById("downloadPost");
-            downloadBtn.addEventListener('click', async () => {
-                try {
-                    const response = await fetch(post.file.url);
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    // Create a filename with post ID and original extension
-                    const extension = getFileExtension(post.file.url);
-                    a.download = `e621_${ID}.${extension}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                } catch (error) {
-                    console.error('Download failed:', error);
-                    alert('Download failed. Please try again or view on e621.');
-                }
-            });
-
-            // Set up view on e621 button
-            const viewBtn = document.getElementById("viewOnE6");
-            viewBtn.addEventListener('click', () => {
-                window.open(`https://e621.net/posts/${ID}`, '_blank');
-            });
-            
-            // Add profile link in the modal info
-            const modalInfo = document.querySelector('.modal-info');
-            if (modalInfo && post.uploader_name) {
-                const uploaderInfo = document.createElement('p');
-                uploaderInfo.innerHTML = `Uploaded by: <a href="profile.html?user=${post.uploader_name}" onclick="loadProfile('${post.uploader_name}'); return false;">${post.uploader_name}</a>`;
-                modalInfo.appendChild(uploaderInfo);
-            }
-        }
-
-        setupModal();
+    // Create the media element (video or image)
+    if (isVideo) {
+        const video = document.createElement("video");
+        video.src = post.file.url;
+        video.className = "preview";
+        video.controls = true;
+        div.appendChild(video);
+    } else {
+        const img = document.createElement("img");
+        img.src = post.sample.url;
+        img.className = "preview";
+        div.appendChild(img);
     }
-    loadItem()
+
+    // Add click event
+    div.addEventListener("click", () => {
+        showModal(post);
+    });
+
+    galerie.appendChild(div);
+}
+
+function showModal(post) {
+    const modalContent = document.getElementById("modalContent");
+    const modal = document.getElementById("modal");
+    const modalBackground = document.getElementById("modalBackground");
+    let isZoomed = false;
+
+    // Determine if it's a video
+    const isVideo = post.file.ext === 'webm';
+
+    // Create media container
+    const mediaContainer = document.createElement('div');
+    mediaContainer.className = 'image-container';
+
+    // Add media type indicator
+    const mediaTypeIndicator = document.createElement('div');
+    mediaTypeIndicator.className = `media-type ${isVideo ? 'video' : 'image'}`;
+    mediaTypeIndicator.textContent = isVideo ? 'Video' : 'Image';
+    mediaContainer.appendChild(mediaTypeIndicator);
+
+    // Create the media element
+    if (isVideo) {
+        const video = document.createElement('video');
+        video.src = post.file.url;
+        video.id = 'modalImg';
+        video.controls = true;
+        mediaContainer.appendChild(video);
+    } else {
+        const img = document.createElement('img');
+        img.src = post.file.url;
+        img.id = 'modalImg';
+        img.alt = post.description || 'Post Image';
+        mediaContainer.appendChild(img);
+    }
+
+    // Clear and update modal content
+    modalContent.innerHTML = '';
+    modalContent.appendChild(mediaContainer);
+
+    // Add modal info
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'modal-info';
+    infoDiv.innerHTML = `
+        <p>
+            <span class="post-id">ID: ${post.id}</span>
+            <span class="separator">|</span>
+            <span class="rating">Rating: ${getFriendlyRating(post.rating)}</span>
+        </p>
+        <div class="post-actions">
+            <button id="downloadPost" class="action-button">
+                <span class="action-icon">⬇️</span>
+                Download
+            </button>
+            <button id="viewOnE6" class="action-button">
+                <span class="action-icon">🔗</span>
+                View on e621
+            </button>
+        </div>
+    `;
+    modalContent.appendChild(infoDiv);
+
+    // Show the modal
+    modal.style.display = "block";
+
+    // Set up modal interactions
+    const setupModal = () => {
+        const modalImg = document.getElementById('modalImg');
+
+        if (!isVideo) {  // Only add zoom functionality for images
+            // Handle zoom click
+            modalImg.addEventListener('click', () => {
+                isZoomed = !isZoomed;
+                modalImg.classList.toggle('zoomed', isZoomed);
+                
+                if (isZoomed) {
+                    modalContent.style.overflow = 'auto';
+                    modalContent.style.cursor = 'move';
+                } else {
+                    modalContent.style.overflow = 'auto';
+                    modalContent.style.cursor = 'default';
+                }
+            });
+
+            // Handle mouse wheel for zooming
+            modalContent.addEventListener('wheel', (e) => {
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                    const currentScale = modalImg.style.transform ? 
+                        parseFloat(modalImg.style.transform.replace('scale(', '').replace(')', '')) : 
+                        1;
+                    
+                    const newScale = Math.max(0.5, Math.min(3, currentScale + delta));
+                    modalImg.style.transform = `scale(${newScale})`;
+                    
+                    if (newScale > 1) {
+                        modalContent.style.overflow = 'auto';
+                        modalContent.style.cursor = 'move';
+                        isZoomed = true;
+                        modalImg.classList.add('zoomed');
+                    } else {
+                        modalContent.style.overflow = 'auto';
+                        modalContent.style.cursor = 'default';
+                        isZoomed = false;
+                        modalImg.classList.remove('zoomed');
+                    }
+                }
+            });
+        }
+
+        // Handle modal close
+        modalBackground.addEventListener('click', CloseModal);
+        
+        // Set up download button
+        const downloadBtn = document.getElementById('downloadPost');
+        downloadBtn.addEventListener('click', () => {
+            window.open(post.file.url, '_blank');
+        });
+        
+        // Set up view on e621 button
+        const viewBtn = document.getElementById('viewOnE6');
+        viewBtn.addEventListener('click', () => {
+            window.open(`https://e621.net/posts/${post.id}`, '_blank');
+        });
+        
+        // Add profile link
+        if (post.uploader_name) {
+            const uploaderInfo = document.createElement('p');
+            uploaderInfo.innerHTML = `Uploaded by: <a href="profile.html?user=${post.uploader_name}" onclick="loadProfile('${post.uploader_name}'); return false;">${post.uploader_name}</a>`;
+            infoDiv.appendChild(uploaderInfo);
+        }
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (modal.style.display === 'block') {
+                if (e.key === 'Escape') {
+                    CloseModal();
+                } else if (!isVideo && e.ctrlKey && e.key === '0') {
+                    // Reset zoom (only for images)
+                    modalImg.style.transform = 'scale(1)';
+                    modalImg.classList.remove('zoomed');
+                    isZoomed = false;
+                    modalContent.style.overflow = 'auto';
+                    modalContent.style.cursor = 'default';
+                }
+            }
+        });
+    };
+
+    setupModal();
 }
 
 function CloseModal() {
@@ -699,3 +730,9 @@ document.addEventListener('DOMContentLoaded', function() {
         loadProfile(profileUser);
     }
 });
+
+function getPost(ID) {
+    return fetch(`https://e621.net/posts/${ID}.json`)
+        .then(response => response.json())
+        .then(data => data.post);
+}
