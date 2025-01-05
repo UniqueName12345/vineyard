@@ -99,8 +99,28 @@ header h1 a:hover {
 
 .search-container {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.search-container input[type="search"] {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--background-secondary);
+    color: var(--text-primary);
+}
+
+.search-container input[type="search"]::placeholder {
+    color: var(--text-secondary);
+}
+
+#titleSearchBox {
+    flex: 0.7;
+    min-width: 150px;
 }
 
 #searchBox {
@@ -114,26 +134,17 @@ header h1 a:hover {
 }
 
 #searchButton {
-    background-color: var(--button-bg);
-    color: var(--text-color);
+    padding: 8px 20px;
+    background: var(--accent-color);
     border: none;
-    padding: 0.5rem 1.5rem;
     border-radius: 4px;
+    color: white;
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
 #searchButton:hover {
-    background-color: var(--button-hover);
-}
-
-.searchOption {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    background-color: var(--content-bg);
-    padding: 1rem;
-    border-radius: 4px;
+    background: var(--accent-hover);
 }
 
 .search-option-item {
@@ -1015,4 +1026,15 @@ header h1 a:hover {
     margin-bottom: 20px;
     text-align: center;
     font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .search-container {
+        flex-direction: column;
+    }
+    
+    .search-container input[type="search"],
+    #searchButton {
+        width: 100%;
+    }
 }

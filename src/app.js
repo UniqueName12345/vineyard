@@ -163,6 +163,7 @@ function loadProfileWorks(direction) {
 var page = 1
 function search(arg) {
     const searchBox = document.getElementById("searchBox").value;
+    const titleSearchBox = document.getElementById("titleSearchBox");
     const rattingOption = document.getElementById("rattingOption");
     const galerie = document.getElementById("galerie");
     const orderSelect = document.getElementById("orderSelect").value;
@@ -205,7 +206,6 @@ function search(arg) {
         
         if (ratingHierarchy[detectedRating] > ratingHierarchy[currentRating]) {
             if (!isAgeVerified) {
-                // Show verification modal first
                 showAgeVerification(detectedRating, () => {
                     rattingOption.value = detectedRating;
                     performSearch();
@@ -220,10 +220,33 @@ function search(arg) {
     performSearch();
 
     function performSearch() {
-        let query = `https://e621.net/posts.json?tags=${searchBox}`
-        if (rattingOption.value != 0){query += `+rating%3A${rattingOption.value}`}
-        if (orderSelect == 1){query += `+order%3Arandom`}
-        if (minimumScore != ""){query += `+score:%3E${minimumScore}`}
+        let query = `https://e621.net/posts.json?`
+        let tags = [];
+
+        // Add title search if present
+        if (titleSearchBox && titleSearchBox.value.trim()) {
+            tags.push(`title:*${titleSearchBox.value.trim()}*`);
+        }
+
+        // Add regular tags if present
+        if (searchBox.trim()) {
+            tags.push(searchBox.trim());
+        }
+
+        // Add tags to query
+        if (tags.length > 0) {
+            query += `tags=${tags.join('+')}`;
+        }
+
+        if (rattingOption.value != 0){
+            query += `+rating:${rattingOption.value}`;
+        }
+        if (orderSelect == 1){
+            query += `+order:random`;
+        }
+        if (minimumScore != ""){
+            query += `+score:>${minimumScore}`;
+        }
         if (arg){
             if (arg == 1){
                 page += 1
