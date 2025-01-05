@@ -3,7 +3,7 @@
 
 ## How to use
 ...it's a website. You put the address into a web browser, and then you can use it from there.
-
+in said website, you can search for tags and get results back. this is how booru sites work
 
 ## Credits
 robin888b, obviously
