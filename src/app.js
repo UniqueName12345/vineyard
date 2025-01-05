@@ -347,110 +347,29 @@ function getFriendlyRating(rating) {
     return ratingMap[rating.toLowerCase()] || 'Unknown';
 }
 
-function showPicture(post) {
-    const galerie = document.getElementById("galerie");
-    const div = document.createElement("div");
-    div.className = "image-container";
-    
-    // Determine if it's a video
-    const isVideo = post.file.ext === 'webm';
-    
-    // Add media type indicator
-    const mediaTypeIndicator = document.createElement('div');
-    mediaTypeIndicator.className = `media-type ${isVideo ? 'video' : 'image'}`;
-    mediaTypeIndicator.textContent = isVideo ? 'Video' : 'Image';
-    div.appendChild(mediaTypeIndicator);
-
-    // Create the media element (video or image)
-    if (isVideo) {
-        const video = document.createElement("video");
-        video.src = post.file.url;
-        video.className = "preview";
-        video.controls = true;
-        div.appendChild(video);
-    } else {
-        const img = document.createElement("img");
-        img.src = post.sample.url;
-        img.className = "preview";
-        div.appendChild(img);
-    }
-
-    // Add click event
-    div.addEventListener("click", () => {
-        showModal(post);
-    });
-
-    galerie.appendChild(div);
-}
-
-function showModal(post) {
+function showPicture(ID) {
     const modalContent = document.getElementById("modalContent");
-    const modal = document.getElementById("modal");
-    const modalBackground = document.getElementById("modalBackground");
-    let isZoomed = false;
+    const loadItem = async () => {
+        const post = await getPost(ID);
+        if (!post) return;
 
-    // Determine if it's a video
-    const isVideo = post.file.ext === 'webm';
+        const modal = document.getElementById("modal");
+        const modalImg = document.getElementById("modalImg");
+        const modalBackground = document.getElementById("modalBackground");
+        let isZoomed = false;
 
-    // Create media container
-    const mediaContainer = document.createElement('div');
-    mediaContainer.className = 'image-container';
-
-    // Add media type indicator
-    const mediaTypeIndicator = document.createElement('div');
-    mediaTypeIndicator.className = `media-type ${isVideo ? 'video' : 'image'}`;
-    mediaTypeIndicator.textContent = isVideo ? 'Video' : 'Image';
-    mediaContainer.appendChild(mediaTypeIndicator);
-
-    // Create the media element
-    if (isVideo) {
-        const video = document.createElement('video');
-        video.src = post.file.url;
-        video.id = 'modalImg';
-        video.controls = true;
-        mediaContainer.appendChild(video);
-    } else {
-        const img = document.createElement('img');
-        img.src = post.file.url;
-        img.id = 'modalImg';
-        img.alt = post.description || 'Post Image';
-        mediaContainer.appendChild(img);
-    }
-
-    // Clear and update modal content
-    modalContent.innerHTML = '';
-    modalContent.appendChild(mediaContainer);
-
-    // Add modal info
-    const infoDiv = document.createElement('div');
-    infoDiv.className = 'modal-info';
-    infoDiv.innerHTML = `
-        <p>
-            <span class="post-id">ID: ${post.id}</span>
-            <span class="separator">|</span>
-            <span class="rating">Rating: ${getFriendlyRating(post.rating)}</span>
-        </p>
-        <div class="post-actions">
-            <button id="downloadPost" class="action-button">
-                <span class="action-icon">⬇️</span>
-                Download
-            </button>
-            <button id="viewOnE6" class="action-button">
-                <span class="action-icon">🔗</span>
-                View on e621
-            </button>
-        </div>
-    `;
-    modalContent.appendChild(infoDiv);
-
-    // Show the modal
-    modal.style.display = "block";
-
-    // Set up modal interactions
-    const setupModal = () => {
-        const modalImg = document.getElementById('modalImg');
-
-        if (!isVideo) {  // Only add zoom functionality for images
+        // Set up the modal image
+        modalImg.src = post.file.url;
+        modalImg.alt = post.description || 'Post Image';
+        
+        // Update modal info with friendly rating
+        document.getElementById("postId").textContent = post.id;
+        document.getElementById("postRating").textContent = getFriendlyRating(post.rating);
+        
+        // Show the modal
+        modal.style.display = "block";
+        
+        const setupModal = () => {
             // Handle zoom click
             modalImg.addEventListener('click', () => {
                 isZoomed = !isZoomed;
@@ -464,6 +383,29 @@ function showModal(post) {
                     modalContent.style.cursor = 'default';
                 }
             });
+
+            // Handle modal close
+            modalBackground.addEventListener('click', CloseModal);
+            
+            // Set up download button
+            const downloadBtn = document.getElementById('downloadPost');
+            downloadBtn.addEventListener('click', () => {
+                window.open(post.file.url, '_blank');
+            });
+            
+            // Set up view on e621 button
+            const viewBtn = document.getElementById('viewOnE6');
+            viewBtn.addEventListener('click', () => {
+                window.open(`https://e621.net/posts/${ID}`, '_blank');
+            });
+            
+            // Add profile link in the modal info
+            const modalInfo = document.querySelector('.modal-info');
+            if (modalInfo && post.uploader_name) {
+                const uploaderInfo = document.createElement('p');
+                uploaderInfo.innerHTML = `Uploaded by: <a href="profile.html?user=${post.uploader_name}" onclick="loadProfile('${post.uploader_name}'); return false;">${post.uploader_name}</a>`;
+                modalInfo.appendChild(uploaderInfo);
+            }
 
             // Handle mouse wheel for zooming
             modalContent.addEventListener('wheel', (e) => {
@@ -490,48 +432,27 @@ function showModal(post) {
                     }
                 }
             });
-        }
 
-        // Handle modal close
-        modalBackground.addEventListener('click', CloseModal);
-        
-        // Set up download button
-        const downloadBtn = document.getElementById('downloadPost');
-        downloadBtn.addEventListener('click', () => {
-            window.open(post.file.url, '_blank');
-        });
-        
-        // Set up view on e621 button
-        const viewBtn = document.getElementById('viewOnE6');
-        viewBtn.addEventListener('click', () => {
-            window.open(`https://e621.net/posts/${post.id}`, '_blank');
-        });
-        
-        // Add profile link
-        if (post.uploader_name) {
-            const uploaderInfo = document.createElement('p');
-            uploaderInfo.innerHTML = `Uploaded by: <a href="profile.html?user=${post.uploader_name}" onclick="loadProfile('${post.uploader_name}'); return false;">${post.uploader_name}</a>`;
-            infoDiv.appendChild(uploaderInfo);
-        }
-
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (modal.style.display === 'block') {
-                if (e.key === 'Escape') {
-                    CloseModal();
-                } else if (!isVideo && e.ctrlKey && e.key === '0') {
-                    // Reset zoom (only for images)
-                    modalImg.style.transform = 'scale(1)';
-                    modalImg.classList.remove('zoomed');
-                    isZoomed = false;
-                    modalContent.style.overflow = 'auto';
-                    modalContent.style.cursor = 'default';
+            // Add keyboard shortcuts for zooming
+            document.addEventListener('keydown', (e) => {
+                if (modal.style.display === 'block') {
+                    if (e.key === 'Escape') {
+                        CloseModal();
+                    } else if (e.ctrlKey && e.key === '0') {
+                        // Reset zoom
+                        modalImg.style.transform = 'scale(1)';
+                        modalImg.classList.remove('zoomed');
+                        isZoomed = false;
+                        modalContent.style.overflow = 'auto';
+                        modalContent.style.cursor = 'default';
+                    }
                 }
-            }
-        });
-    };
+            });
+        }
 
-    setupModal();
+        setupModal();
+    }
+    loadItem();
 }
 
 function CloseModal() {
