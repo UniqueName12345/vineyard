@@ -60,6 +60,94 @@ function search(arg) {
     const loadingMessage = document.getElementById("loading-message");
     const welcomeMessage = document.getElementById("welcome-message");
     
+    // Check if this is a post ID search
+    const idMatch = searchBox.match(/^#(\d+)$/);
+    if (idMatch) {
+        // Hide welcome message and show loading message
+        welcomeMessage.style.display = 'none';
+        loadingMessage.classList.remove("hidden");
+        
+        // Make direct request to the post ID
+        const postId = idMatch[1];
+        fetch(`https://e621.net/posts/${postId}.json`)
+            .then(response => response.json())
+            .then(data => {
+                galerie.innerHTML = loadingMessage.outerHTML + welcomeMessage.outerHTML;
+                welcomeMessage.style.display = 'none';
+                
+                if (data.post) {
+                    const post = data.post;
+                    let rating = "";
+                    switch(post.rating) {
+                        case "s":
+                            rating = "safe";
+                            break;
+                        case "q":
+                            rating = "mature";
+                            break;
+                        case "e":
+                            rating = "adult";
+                            break;
+                    }
+                    
+                    if (post.file.url != null) {
+                        const imgDiv = document.createElement("div");
+                        imgDiv.className = "image-container";
+                        if (post.rating !== 's') {
+                            imgDiv.classList.add('unsafe', 'blurred');
+                        }
+                        
+                        const img = document.createElement("img");
+                        img.src = String(post.preview.url);
+                        img.loading = "lazy";
+                        imgDiv.appendChild(img);
+                        
+                        let clickCount = 0;
+                        let clickTimer = null;
+                        
+                        imgDiv.addEventListener('click', (e) => {
+                            clickCount++;
+                            
+                            if (post.rating !== 's') {
+                                if (clickCount === 1) {
+                                    imgDiv.classList.remove('blurred');
+                                    clickTimer = setTimeout(() => {
+                                        clickCount = 0;
+                                    }, 500);
+                                } else if (clickCount === 2) {
+                                    clearTimeout(clickTimer);
+                                    clickCount = 0;
+                                    showPicture(String(post.id));
+                                }
+                            } else {
+                                showPicture(String(post.id));
+                            }
+                        });
+                        
+                        galerie.appendChild(imgDiv);
+                    }
+                    loadingMessage.classList.add("hidden");
+                } else {
+                    loadingMessage.classList.add("hidden");
+                    welcomeMessage.style.display = 'block';
+                    const noResults = document.createElement("div");
+                    noResults.className = "no-results";
+                    noResults.innerHTML = "<p>Post not found</p>";
+                    galerie.appendChild(noResults);
+                }
+            })
+            .catch(error => {
+                console.error("Error loading post:", error);
+                loadingMessage.classList.add("hidden");
+                welcomeMessage.style.display = 'block';
+                const errorMessage = document.createElement("div");
+                errorMessage.className = "error-message";
+                errorMessage.innerHTML = "<p>Error loading post. Please try again.</p>";
+                galerie.appendChild(errorMessage);
+            });
+        return;
+    }
+    
     // Detect rating from search terms one final time before search
     const detectedRating = detectRatingFromTags(searchBox);
     if (detectedRating) {
