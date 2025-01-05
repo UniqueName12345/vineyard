@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vineyard - Artist Profile</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-left">
+                <a href="index.html">🍇 Vineyard</a>
+            </div>
+            <div class="nav-right">
+                <a href="about.html">About</a>
+            </div>
+        </nav>
+    </header>
+
+    <section id="profile-section">
+        <div id="profile-header">
+            <div class="profile-info">
+                <h1 id="artist-name">Loading...</h1>
+                <div id="artist-stats">
+                    <span id="post-count">Posts: --</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="profile-content">
+            <div class="profile-tabs">
+                <button class="tab-button active" onclick="showTab('posts')">Posts</button>
+                <button class="tab-button" onclick="showTab('favorites')">Favorites</button>
+            </div>
+
+            <div id="profile-gallery" class="gallery-grid">
+                <!-- Posts will be loaded here -->
+            </div>
+
+            <div class="button">
+                <button onclick="loadMore(-1)">Previous</button>
+                <span>Page <span id="pageNumber">1</span></span>
+                <button onclick="loadMore(1)">Next</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reuse the same modal from index.html -->
+    <div id="modal">
+        <div id="modalBackground"></div>
+        <div id="modalContent">
+            <img src="" id="modalImg" alt="Post Image">
+            <div class="modal-info">
+                <p>
+                    <span class="post-id">ID: <span id="postId">0</span></span>
+                    <span class="separator">|</span>
+                    <span class="rating">Rating: <span id="postRating">unknown</span></span>
+                </p>
+                <div class="post-actions">
+                    <button id="downloadPost" class="action-button">
+                        <span class="action-icon">⬇️</span>
+                        Download
+                    </button>
+                    <button id="viewOnE6" class="action-button">
+                        <span class="action-icon">🔗</span>
+                        View on e621
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="age-verification-modal" class="modal">
+        <div class="modal-content verification-content">
+            <h2>Age Verification</h2>
+            <p id="verification-message"></p>
+            <div class="verify-checkbox">
+                <label>
+                    <input type="checkbox" id="age-verify-checkbox">
+                    *Raises paw solemnly* I confirm that I am at least 18 years old
+                </label>
+            </div>
+            <div class="verify-buttons">
+                <button id="verify-cancel" class="verify-button cancel">
+                    *Backs away* Nevermind...
+                </button>
+                <button id="verify-confirm" class="verify-button confirm" disabled>
+                    *Nods* I understand
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/app.js"></script>
+    <script src="src/profile.js"></script>
+</body>
+</html>

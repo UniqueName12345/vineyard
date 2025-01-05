@@ -60,6 +60,33 @@ function search(arg) {
     const loadingMessage = document.getElementById("loading-message");
     const welcomeMessage = document.getElementById("welcome-message");
     
+    // Check if searching for a specific work ID
+    const workIdMatch = searchBox.match(/^#(\d+)$/);
+    if (workIdMatch) {
+        const workId = workIdMatch[1];
+        let query = `https://e621.net/posts/${workId}.json`;
+        fetch(query, {
+            headers: {
+                'User-Agent': 'Vineyard/1.0'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.post) {
+                galerie.innerHTML = '';
+                showPicture(data.post);
+                welcomeMessage.style.display = 'none';
+            } else {
+                galerie.innerHTML = '<p class="error">Work not found</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            galerie.innerHTML = '<p class="error">Error loading work</p>';
+        });
+        return;
+    }
+
     // Detect rating from search terms one final time before search
     const detectedRating = detectRatingFromTags(searchBox);
     if (detectedRating) {
@@ -202,114 +229,67 @@ function search(arg) {
 
 // ... (rest of the code remains the same)
 
-function showPicture(ID) {
-    const modalContent = document.getElementById("modalContent")
-    const loadItem = async () => {
-        const result = await fetch(`https://e621.net/posts/${ID}.json`)
-        const data = await result.json()
-        console.log(data)
-        
-        // Helper function to get file extension
-        const getFileExtension = (url) => {
-            return url.split('.').pop().toLowerCase();
-        }
-        
-        // Helper function to get filename from URL
-        const getFilename = (url) => {
-            const parts = url.split('/');
-            return parts[parts.length - 1];
-        }
-
-        function setupModal() {
-            const post = data.post;
-            const isVideo = post.file.url.endsWith(".webm");
-            const isUnsafe = post.rating !== 's';
-            
-            // Create container for media
-            const mediaContainer = document.createElement('div');
-            mediaContainer.className = `image-container${isUnsafe ? ' unsafe blurred' : ''}`;
-            
-            // Set up the media element (image or video)
-            const mediaElement = isVideo ? 
-                `<video controls src="${post.file.url}" id="modalImg"></video>` :
-                `<img src="${post.file.url}" id="modalImg" alt="Post Image">`;
-            
-            // Set up the info section
-            const infoHtml = `
-                <div class="modal-info">
-                    <p>
-                        <span class="post-id">ID: ${ID}</span>
-                        <span class="separator">|</span>
-                        <span class="rating">Rating: ${post.rating}</span>
-                    </p>
-                    <div class="post-actions">
-                        <button id="downloadPost" class="action-button">
-                            <span class="action-icon">⬇️</span>
-                            Download
-                        </button>
-                        <button id="viewOnE6" class="action-button">
-                            <span class="action-icon">🔗</span>
-                            View on e621
-                        </button>
-                    </div>
-                </div>`;
-
-            mediaContainer.innerHTML = mediaElement;
-            modalContent.innerHTML = '';
-            modalContent.appendChild(mediaContainer);
-            modalContent.insertAdjacentHTML('beforeend', infoHtml);
-
-            if (isUnsafe) {
-                let clickCount = 0;
-                let clickTimer = null;
-                
-                mediaContainer.addEventListener('click', (e) => {
-                    clickCount++;
-                    
-                    if (clickCount === 1) {
-                        mediaContainer.classList.remove('blurred');
-                        clickTimer = setTimeout(() => {
-                            clickCount = 0;
-                        }, 500);
-                    }
-                });
-            }
-
-            // Set up download button
-            const downloadBtn = document.getElementById("downloadPost");
-            downloadBtn.addEventListener('click', async () => {
-                try {
-                    const response = await fetch(post.file.url);
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    // Create a filename with post ID and original extension
-                    const extension = getFileExtension(post.file.url);
-                    a.download = `e621_${ID}.${extension}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                } catch (error) {
-                    console.error('Download failed:', error);
-                    alert('Download failed. Please try again or view on e621.');
-                }
-            });
-
-            // Set up view on e621 button
-            const viewBtn = document.getElementById("viewOnE6");
-            viewBtn.addEventListener('click', () => {
-                window.open(`https://e621.net/posts/${ID}`, '_blank');
-            });
-        }
-
-        setupModal();
+function showPicture(post, targetElement = null) {
+    const gallery = targetElement || document.getElementById("galerie");
+    
+    // Create container for the post
+    const container = document.createElement('div');
+    container.className = 'post-container';
+    
+    // Create the image element
+    const img = document.createElement("img");
+    img.src = post.preview.url;
+    img.alt = "Post Preview";
+    img.loading = "lazy";
+    
+    // Add click handler for modal
+    img.onclick = () => {
         const modal = document.getElementById("modal");
-        modal.classList.add("active");
+        const modalImg = document.getElementById("modalImg");
+        const postIdSpan = document.getElementById("postId");
+        const postRatingSpan = document.getElementById("postRating");
+        const downloadButton = document.getElementById("downloadPost");
+        const viewOnE6Button = document.getElementById("viewOnE6");
+        
+        modal.style.display = "block";
+        modalImg.src = post.file.url;
+        postIdSpan.textContent = post.id;
+        postRatingSpan.textContent = post.rating.toUpperCase();
+        
+        // Update download button
+        downloadButton.onclick = () => {
+            window.open(post.file.url, '_blank');
+        };
+        
+        // Update e621 link button
+        viewOnE6Button.onclick = () => {
+            window.open(`https://e621.net/posts/${post.id}`, '_blank');
+        };
+    };
+    
+    // Create info overlay
+    const infoOverlay = document.createElement('div');
+    infoOverlay.className = 'post-info-overlay';
+    
+    // Add artist link if available
+    if (post.tags.artist && post.tags.artist.length > 0) {
+        const artistLink = document.createElement('a');
+        artistLink.href = `profile.html?artist=${encodeURIComponent(post.tags.artist[0])}`;
+        artistLink.className = 'artist-link';
+        artistLink.textContent = post.tags.artist[0];
+        infoOverlay.appendChild(artistLink);
     }
-    loadItem()
+    
+    // Add rating indicator
+    const ratingSpan = document.createElement('span');
+    ratingSpan.className = 'rating-indicator';
+    ratingSpan.textContent = post.rating.toUpperCase();
+    infoOverlay.appendChild(ratingSpan);
+    
+    // Assemble the post container
+    container.appendChild(img);
+    container.appendChild(infoOverlay);
+    gallery.appendChild(container);
 }
 
 function CloseModal() {

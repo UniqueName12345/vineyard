@@ -1,0 +1,302 @@
+/* General Styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+
+/* Navigation */
+header {
+    background-color: #2a2a2a;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+nav a {
+    color: #ffffff;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+nav a:hover {
+    background-color: #3a3a3a;
+}
+
+/* Profile Page */
+#profile-section {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+#profile-header {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.profile-info h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #ffffff;
+}
+
+#artist-stats {
+    margin-top: 1rem;
+    color: #999;
+}
+
+.profile-tabs {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    color: #999;
+    padding: 1rem 2rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.tab-button.active {
+    color: #ffffff;
+    border-bottom: 2px solid #7289da;
+}
+
+.tab-button:hover {
+    color: #ffffff;
+}
+
+/* Gallery Grid */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.post-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background-color: #2a2a2a;
+}
+
+.post-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.2s;
+}
+
+.post-container:hover img {
+    transform: scale(1.05);
+}
+
+.post-info-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.5rem;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.post-container:hover .post-info-overlay {
+    opacity: 1;
+}
+
+.artist-link {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 0.2rem 0.5rem;
+    background-color: rgba(114, 137, 218, 0.8);
+    border-radius: 4px;
+}
+
+.artist-link:hover {
+    background-color: rgba(114, 137, 218, 1);
+}
+
+.rating-indicator {
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+/* Modal Styles */
+#modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+}
+
+#modalBackground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+#modalContent {
+    position: relative;
+    max-width: 90%;
+    max-height: 90vh;
+    margin: 2rem auto;
+    z-index: 1001;
+}
+
+#modalImg {
+    max-width: 100%;
+    max-height: 80vh;
+    margin: 0 auto;
+    display: block;
+}
+
+.modal-info {
+    background-color: #2a2a2a;
+    padding: 1rem;
+    border-radius: 0 0 8px 8px;
+    margin-top: 1rem;
+}
+
+.post-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.action-button {
+    background-color: #3a3a3a;
+    border: none;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.action-button:hover {
+    background-color: #4a4a4a;
+}
+
+/* Pagination */
+.button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.button button {
+    background-color: #3a3a3a;
+    border: none;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.button button:hover {
+    background-color: #4a4a4a;
+}
+
+/* Age Verification Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+}
+
+.verification-content {
+    background-color: #2a2a2a;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    margin: 10% auto;
+}
+
+.verify-checkbox {
+    margin: 1.5rem 0;
+}
+
+.verify-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.verify-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.verify-button.cancel {
+    background-color: #3a3a3a;
+    color: #ffffff;
+}
+
+.verify-button.confirm {
+    background-color: #7289da;
+    color: #ffffff;
+}
+
+.verify-button.confirm:disabled {
+    background-color: #4a4a4a;
+    cursor: not-allowed;
+}
+
+/* Error Messages */
+.error {
+    color: #ff6b6b;
+    text-align: center;
+    padding: 2rem;
+}
+
+.no-results {
+    color: #999;
+    text-align: center;
+    padding: 2rem;
+}
